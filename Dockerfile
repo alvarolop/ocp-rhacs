@@ -4,7 +4,7 @@ ARG RHACS_VERSION=4.10.0
 
 LABEL org.opencontainers.image.authors="alopezme@redhat.com"
 
-RUN microdnf install -y --nodocs curl tar gzip \
+RUN microdnf install -y --nodocs tar gzip \
     && microdnf clean all \
     && rm -rf /var/cache/yum
 
