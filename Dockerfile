@@ -1,8 +1,11 @@
-FROM registry.redhat.io/openshift4/ose-cli:v4.14
+FROM registry.access.redhat.com/advanced-cluster-security/rhacs-roxctl-rhel8:4.10
 
 LABEL org.opencontainers.image.authors="alopezme@redhat.com"
 
-ENV ACS_VERSION=4.3.4
+RUN dnf install -y --nodocs curl tar gzip \
+    && dnf clean all \
+    && rm -rf /var/cache/dnf
 
-RUN curl -f -o /usr/bin/roxctl https://mirror.openshift.com/pub/rhacs/assets/$ACS_VERSION/bin/Linux/roxctl \
-    && chmod +x /usr/bin/roxctl
+RUN curl -fsSL https://mirror.openshift.com/pub/openshift-v4/clients/ocp/stable/openshift-client-linux-amd64-rhel8.tar.gz \
+    | tar xzf - -C /usr/local/bin oc kubectl \
+    && chmod +x /usr/local/bin/oc /usr/local/bin/kubectl
