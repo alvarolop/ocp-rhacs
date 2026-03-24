@@ -33,6 +33,11 @@ spec:
               ADMIN_PASSWORD="${ACS_ADMIN_PASSWORD}"
               CRS_NAME="${ACS_CRS_NAME:-local-cluster}"
 
+              if oc get secret cluster-registration-secret -n stackrox &>/dev/null; then
+                echo "Cluster Registration Secret already exists. Skipping."
+                exit 0
+              fi
+
               echo -n "[1/3] Waiting for ACS Central to be ready..."
               until [[ $(curl -s -k -o /dev/null -w "%{http_code}" "$CENTRAL_ADDRESS") -eq 200 ]]; do
                 echo -n "." && sleep 5
