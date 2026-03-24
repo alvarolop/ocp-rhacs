@@ -1,0 +1,70 @@
+---
+apiVersion: batch/v1
+kind: Job
+metadata:
+  annotations:
+    argocd.argoproj.io/sync-wave: "10"
+  name: acs-enable-plugin
+  namespace: stackrox
+spec:
+  template:
+    spec:
+      containers:
+        - name: acs-enable-plugin
+          image: registry.redhat.io/openshift4/ose-cli:latest
+          imagePullPolicy: Always
+          command:
+            - /bin/bash
+            - -c
+            - |
+              #
+              # Enable the RHACS dynamic console plugin for OpenShift.
+              # ACS 4.10+ ships a ConsolePlugin that surfaces vulnerability data
+              # directly in the OpenShift web console (Technology Preview).
+              #
+              # The script discovers the plugin name from the Operator CSV and
+              # patches console.operator.openshift.io/cluster to enable it.
+              #
+
+              OPERATOR_NS="${OPERATOR_NAMESPACE:-rhacs-operator}"
+
+              echo -n "[1/3] Waiting for the RHACS Operator CSV to succeed..."
+              until oc get csv -n "$OPERATOR_NS" -o jsonpath='{.items[0].status.phase}' 2>/dev/null | grep -q "Succeeded"; do
+                echo -n "." && sleep 5
+              done
+              echo -e " [READY]"
+              echo ""
+
+              echo "[2/3] Discovering the RHACS console plugin..."
+              PLUGIN_NAME=$(oc get csv -n "$OPERATOR_NS" -o jsonpath='{.items[0].metadata.annotations.console\.openshift\.io/plugins}' 2>/dev/null \
+                | tr -d '[]"' | tr ',' '\n' | head -1)
+
+              if [ -z "$PLUGIN_NAME" ]; then
+                echo "WARNING: No console plugin annotation found in CSV. Using default name 'rhacs'."
+                PLUGIN_NAME="rhacs"
+              fi
+              echo "  Plugin name: $PLUGIN_NAME"
+              echo ""
+
+              echo "[3/3] Enabling the RHACS console plugin..."
+              EXISTING=$(oc get console.operator.openshift.io cluster -o jsonpath='{.spec.plugins[*]}' 2>/dev/null)
+              if echo "$EXISTING" | grep -qw "$PLUGIN_NAME"; then
+                echo "  Plugin '$PLUGIN_NAME' is already enabled. Nothing to do."
+                exit 0
+              fi
+
+              # Ensure the spec.plugins array exists before appending
+              oc patch console.operator.openshift.io cluster --type=json \
+                -p='[{"op":"add","path":"/spec/plugins","value":[]}]' 2>/dev/null || true
+
+              oc patch console.operator.openshift.io cluster --type=json \
+                -p="[{\"op\":\"add\",\"path\":\"/spec/plugins/-\",\"value\":\"${PLUGIN_NAME}\"}]"
+
+              echo "  Plugin '$PLUGIN_NAME' enabled successfully."
+          env:
+            - name: OPERATOR_NAMESPACE
+              value: "rhacs-operator"
+      dnsPolicy: ClusterFirst
+      restartPolicy: OnFailure
+      serviceAccountName: acs-enable-plugin
+      terminationGracePeriodSeconds: 30

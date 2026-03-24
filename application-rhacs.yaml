@@ -5,15 +5,57 @@ metadata:
   labels:
     app: rhacs
   name: rhacs
-  namespace: gitops
+  namespace: openshift-gitops
 spec:
   destination:
     server: 'https://kubernetes.default.svc'
   project: default
   source:
-    path: openshift
-    repoURL: https://github.com/alvarolop/ocp-acs
+    path: gitops-rhacs
+    repoURL: https://github.com/alvarolop/ocp-rhacs
     targetRevision: main
+    kustomize:
+      components:
+        - components/auth-oidc
+        - components/consolelink
+      patches:
+        - target:
+            kind: ConsoleLink
+            name: stackrox-central
+          patch: |-
+            - op: replace
+              path: /spec/href
+              value: https://central-stackrox.apps.$CLUSTER_DOMAIN
+        - target:
+            kind: OAuthClient
+            name: rhacs-oidc
+          patch: |-
+            - op: replace
+              path: /redirectURIs
+              value:
+                - https://central-stackrox.apps.$CLUSTER_DOMAIN/sso/providers/oidc/callback
+        - target:
+            kind: Secret
+            name: declarative-auth-openshift
+          patch: |-
+            apiVersion: v1
+            kind: Secret
+            metadata:
+              name: declarative-auth-openshift
+            stringData:
+              auth-provider.yaml: |
+                name: OpenShift OIDC
+                minimumRole: None
+                uiEndpoint: central-stackrox.apps.$CLUSTER_DOMAIN
+                groups:
+                  - key: groups
+                    value: system:cluster-admins
+                    role: Admin
+                oidc:
+                  issuer: https://oauth-openshift.apps.$CLUSTER_DOMAIN
+                  mode: auto
+                  clientID: rhacs-oidc
+                  clientSecret: CHANGEME-replace-with-random-secret
   syncPolicy:
     automated:
       prune: false

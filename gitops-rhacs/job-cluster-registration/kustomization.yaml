@@ -1,0 +1,8 @@
+---
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+resources:
+  - sa-acs-cluster-registration.yaml
+  - cr-acs-cluster-registration.yaml
+  - crb-acs-cluster-registration.yaml
+  - job-acs-cluster-registration.yaml

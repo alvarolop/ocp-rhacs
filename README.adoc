@@ -111,3 +111,4 @@ NOTE: Take into account that this script is limited and currently just deploys A
 * RH ACS Workshop: https://redhat-scholars.github.io/acs-workshop/acs-workshop/index.html
 * Git Repo full of resources: https://github.com/stackrox/contributions
 * Example, manage Policies with Ansible: https://github.com/neilcar/ansible-acs-policy-mgmt
+* Helm Chart with good ideas on how to deploy it with GitOps: https://github.com/nmasse-itix/rhacs-gitops/tree/main

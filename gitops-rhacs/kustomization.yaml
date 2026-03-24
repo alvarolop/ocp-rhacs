@@ -1,0 +1,19 @@
+---
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+resources:
+  # Operator installation (namespace, operatorgroup, subscription)
+  - operator
+  # Central instance namespace and deployment
+  - ns-stackrox.yaml
+  - central-stackrox-central-services.yaml
+  # Console link: deployed only via ArgoCD (see components/consolelink)
+  # Day 2: Enable the RHACS dynamic console plugin (ACS 4.10+)
+  - job-enable-plugin
+  # Day 2: Generate and apply a Cluster Registration Secret (CRS) for secured cluster auth
+  - job-cluster-registration
+  # Day 2: Upload offline vulnerability definitions (disconnected mode)
+  - job-fetch-vuln-definitions
+  # Secured cluster registration
+  - securedcluster-local.yaml
+# Auth provider: deploy via component (see components/auth-openshift, components/auth-oidc)

@@ -1,0 +1,16 @@
+---
+apiVersion: kustomize.config.k8s.io/v1alpha1
+kind: Component
+resources:
+  - secret-oidc-openshift.yaml
+  - oauthclient-rhacs-oidc.yaml
+patches:
+  - target:
+      kind: Central
+      name: stackrox-central-services
+    patch: |-
+      - op: add
+        path: /spec/central/declarativeConfiguration
+        value:
+          secrets:
+            - name: declarative-auth-openshift

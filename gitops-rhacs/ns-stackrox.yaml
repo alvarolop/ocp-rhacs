@@ -1,9 +1,9 @@
 ---
-apiVersion: project.openshift.io/v1
-kind: Project
+apiVersion: v1
+kind: Namespace
 metadata:
   annotations:
     openshift.io/description: This project contains the actual installation of the ACS Central
     openshift.io/display-name: Stackrox
-    argocd.argoproj.io/sync-wave: "0"
+    argocd.argoproj.io/sync-wave: "-10"
   name: stackrox

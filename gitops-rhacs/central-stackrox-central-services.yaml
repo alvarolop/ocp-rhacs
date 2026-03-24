@@ -5,7 +5,7 @@ metadata:
   name: stackrox-central-services
   namespace: stackrox
   annotations:
-    argocd.argoproj.io/sync-wave: "10"
+    argocd.argoproj.io/sync-wave: "0"
     argocd.argoproj.io/sync-options: SkipDryRunOnMissingResource=true
 spec:
   monitoring:
@@ -33,13 +33,9 @@ spec:
       persistentVolumeClaim:
         claimName: stackrox-db
   egress:
-    # This is the only change for an offline installation
-    # connectivityPolicy: Online
     connectivityPolicy: Offline
   scanner:
     analyzer:
       scaling:
-        autoScaling: Enabled
-        maxReplicas: 5
-        minReplicas: 2
-        replicas: 3
+        autoScaling: Disabled
+        replicas: 1

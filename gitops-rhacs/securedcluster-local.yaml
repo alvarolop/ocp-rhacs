@@ -2,33 +2,27 @@
 kind: SecuredCluster
 apiVersion: platform.stackrox.io/v1alpha1
 metadata:
-  name: stackrox-secured-cluster-hub-cluster
+  name: local
   namespace: stackrox
   annotations:
     argocd.argoproj.io/sync-wave: "20"
     argocd.argoproj.io/sync-options: SkipDryRunOnMissingResource=true
 spec:
   centralEndpoint: https://central.stackrox.svc:443
-  clusterName: hub-cluster
+  clusterName: local
   monitoring:
     openshift:
       enabled: true
   auditLogs:
     collection: Auto
   admissionControl:
-    listenOnUpdates: true
+    enforcement: Enabled
     bypass: BreakGlassAnnotation
-    contactImageScanners: DoNotScanInline
-    listenOnCreates: true
-    replicas: 3
-    timeoutSeconds: 20
-    listenOnEvents: true
+    replicas: 1
   scanner:
     analyzer:
       scaling:
-        autoScaling: Enabled
-        maxReplicas: 5
-        minReplicas: 1
+        autoScaling: Disabled
         replicas: 1
     scannerComponent: AutoSense
   perNode:

@@ -1,0 +1,15 @@
+---
+apiVersion: kustomize.config.k8s.io/v1alpha1
+kind: Component
+resources:
+  - secret-openshift-auth.yaml
+patches:
+  - target:
+      kind: Central
+      name: stackrox-central-services
+    patch: |-
+      - op: add
+        path: /spec/central/declarativeConfiguration
+        value:
+          secrets:
+            - name: declarative-auth-openshift

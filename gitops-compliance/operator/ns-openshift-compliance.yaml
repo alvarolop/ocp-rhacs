@@ -1,0 +1,11 @@
+---
+apiVersion: v1
+kind: Namespace
+metadata:
+  annotations:
+    openshift.io/description: This project contains the Compliance Operator and its resources
+    openshift.io/display-name: Compliance Operator
+    argocd.argoproj.io/sync-wave: "-10"
+  labels:
+    pod-security.kubernetes.io/enforce: privileged
+  name: openshift-compliance

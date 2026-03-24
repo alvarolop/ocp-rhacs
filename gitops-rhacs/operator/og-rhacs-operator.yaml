@@ -5,5 +5,5 @@ metadata:
   name: rhacs-operator
   namespace: rhacs-operator
   annotations:
-    argocd.argoproj.io/sync-wave: "01"
+    argocd.argoproj.io/sync-wave: "-5"
 spec: {}

@@ -1,0 +1,63 @@
+---
+apiVersion: batch/v1
+kind: Job
+metadata:
+  annotations:
+    argocd.argoproj.io/sync-wave: "10"
+  name: acs-cluster-registration
+  namespace: stackrox
+spec:
+  template:
+    spec:
+      containers:
+        - name: acs-cluster-registration
+          image: quay.io/alopezme/rhacs-roxctl-oc:latest
+          imagePullPolicy: Always
+          command:
+            - /bin/bash
+            - -c
+            - |
+              #
+              # Generate and apply a Cluster Registration Secret (CRS) for
+              # secured cluster authentication with Central.
+              # CRS is the preferred method since RHACS 4.7+: it contains a
+              # short-lived token instead of long-lived certificates, allowing
+              # immediate revocation after the secured cluster connects.
+              #
+              # Requires: roxctl, oc, curl
+              #
+
+              CENTRAL_ADDRESS="${ROX_CENTRAL_ADDRESS:-https://central.stackrox.svc:443}"
+              ADMIN_PASSWORD="${ACS_ADMIN_PASSWORD}"
+              CRS_NAME="${ACS_CRS_NAME:-local-cluster}"
+
+              echo -n "[1/3] Waiting for ACS Central to be ready..."
+              until [[ $(curl -s -k -o /dev/null -w "%{http_code}" "$CENTRAL_ADDRESS") -eq 200 ]]; do
+                echo -n "." && sleep 5
+              done
+              echo -e " [ONLINE]"
+              echo ""
+
+              echo "[2/3] Generating a Cluster Registration Secret (CRS) named '$CRS_NAME'..."
+              roxctl --insecure-skip-tls-verify \
+                -e "$CENTRAL_ADDRESS" -p "$ADMIN_PASSWORD" \
+                central crs generate "$CRS_NAME" \
+                --output /tmp/cluster-registration-secret.yaml
+              echo ""
+
+              echo "[3/3] Applying the CRS to the local cluster..."
+              oc apply -f /tmp/cluster-registration-secret.yaml -n stackrox
+          env:
+            - name: ACS_ADMIN_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: central-htpasswd
+                  key: password
+            - name: ROX_CENTRAL_ADDRESS
+              value: "https://central.stackrox.svc:443"
+            - name: ACS_CRS_NAME
+              value: "local-cluster"
+      dnsPolicy: ClusterFirst
+      restartPolicy: OnFailure
+      serviceAccountName: acs-cluster-registration
+      terminationGracePeriodSeconds: 30

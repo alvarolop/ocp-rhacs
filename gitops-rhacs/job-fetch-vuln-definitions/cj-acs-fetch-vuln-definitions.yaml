@@ -1,0 +1,67 @@
+---
+apiVersion: batch/v1
+kind: CronJob
+metadata:
+  annotations:
+    argocd.argoproj.io/sync-wave: "10"
+  name: acs-fetch-vuln-definitions
+  namespace: stackrox
+spec:
+  schedule: "0 12 * * *"
+  concurrencyPolicy: Forbid
+  successfulJobsHistoryLimit: 3
+  failedJobsHistoryLimit: 3
+  jobTemplate:
+    spec:
+      template:
+        spec:
+          containers:
+            - name: acs-fetch-vuln-definitions
+              image: quay.io/alopezme/rhacs-roxctl-oc:latest
+              imagePullPolicy: Always
+              command:
+                - /bin/bash
+                - -c
+                - |
+                  #
+                  # Download and upload offline vulnerability definitions to ACS Central.
+                  # Required for disconnected/offline installations where Central cannot
+                  # reach the internet to fetch vulnerability data automatically.
+                  #
+                  # Source: https://github.com/stackrox/contributions/blob/main/util-scripts/cronjob-upload-vuln-definitions
+                  # Requires: roxctl, curl
+                  #
+
+                  CENTRAL_ADDRESS="${ROX_CENTRAL_ADDRESS:-https://central.stackrox.svc:443}"
+                  ADMIN_PASSWORD="${ACS_ADMIN_PASSWORD}"
+                  VULN_URL="${SCANNER_VULN_URL:-https://install.stackrox.io/scanner/scanner-vuln-updates.zip}"
+
+                  echo -n "[1/3] Waiting for ACS Central to be ready..."
+                  until [[ $(curl -s -k -o /dev/null -w "%{http_code}" "$CENTRAL_ADDRESS") -eq 200 ]]; do
+                    echo -n "." && sleep 5
+                  done
+                  echo -e " [ONLINE]"
+                  echo ""
+
+                  echo "[2/3] Downloading Scanner vulnerability definitions..."
+                  curl -s "$VULN_URL" --output /tmp/scanner-vuln-updates.zip
+                  echo "  Downloaded from: $VULN_URL"
+                  echo ""
+
+                  echo "[3/3] Uploading vulnerability definitions to Central..."
+                  roxctl --insecure-skip-tls-verify \
+                    -e "$CENTRAL_ADDRESS" -p "$ADMIN_PASSWORD" \
+                    scanner upload-db --scanner-db-file=/tmp/scanner-vuln-updates.zip
+                  echo ""
+              env:
+                - name: ACS_ADMIN_PASSWORD
+                  valueFrom:
+                    secretKeyRef:
+                      name: central-htpasswd
+                      key: password
+                - name: ROX_CENTRAL_ADDRESS
+                  value: "https://central.stackrox.svc:443"
+          dnsPolicy: ClusterFirst
+          restartPolicy: OnFailure
+          serviceAccountName: default
+          terminationGracePeriodSeconds: 30

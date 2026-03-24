@@ -1,0 +1,12 @@
+---
+apiVersion: console.openshift.io/v1
+kind: ConsoleLink
+metadata:
+  name: stackrox-central
+spec:
+  href: https://central-stackrox.apps.cluster.example.com
+  location: ApplicationMenu
+  text: RHACS Central
+  applicationMenu:
+    section: Security
+    imageURL: https://d7umqicpi7263.cloudfront.net/img/product/378280a8-0f03-4be1-8ace-0c09dec21a20/ab91a3cc-d11f-41c4-8f32-3cf56fa9db9f.png

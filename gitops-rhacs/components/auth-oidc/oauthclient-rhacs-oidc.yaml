@@ -1,0 +1,11 @@
+---
+apiVersion: oauth.openshift.io/v1
+kind: OAuthClient
+metadata:
+  name: rhacs-oidc
+  annotations:
+    argocd.argoproj.io/sync-wave: "-1"
+secret: CHANGEME-replace-with-random-secret
+grantMethod: auto
+redirectURIs:
+  - https://central-stackrox.apps.cluster.example.com/sso/providers/oidc/callback
