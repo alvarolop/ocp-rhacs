@@ -22,6 +22,8 @@ spec:
         enabled: false
       route:
         enabled: true
+        reencrypt:
+          enabled: true
     telemetry:
       enabled: true
     db:

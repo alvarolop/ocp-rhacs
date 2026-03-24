@@ -4,7 +4,7 @@ kind: ConsoleLink
 metadata:
   name: stackrox-central
 spec:
-  href: https://central-stackrox.apps.cluster.example.com
+  href: https://central-reencrypt-stackrox.apps.cluster.example.com
   location: ApplicationMenu
   text: RHACS Central
   applicationMenu:

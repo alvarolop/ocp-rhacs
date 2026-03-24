@@ -25,7 +25,7 @@ spec:
           patch: |-
             - op: replace
               path: /spec/href
-              value: https://central-stackrox.apps.$CLUSTER_DOMAIN
+              value: https://central-reencrypt-stackrox.apps.$CLUSTER_DOMAIN
         - target:
             kind: OAuthClient
             name: rhacs-oidc
@@ -33,7 +33,7 @@ spec:
             - op: replace
               path: /redirectURIs
               value:
-                - https://central-stackrox.apps.$CLUSTER_DOMAIN/sso/providers/oidc/callback
+                - https://central-reencrypt-stackrox.apps.$CLUSTER_DOMAIN/sso/providers/oidc/callback
         - target:
             kind: Secret
             name: declarative-auth-openshift
@@ -46,7 +46,7 @@ spec:
               auth-provider.yaml: |
                 name: OpenShift OIDC
                 minimumRole: None
-                uiEndpoint: central-stackrox.apps.$CLUSTER_DOMAIN
+                uiEndpoint: central-reencrypt-stackrox.apps.$CLUSTER_DOMAIN
                 groups:
                   - key: groups
                     value: system:cluster-admins
