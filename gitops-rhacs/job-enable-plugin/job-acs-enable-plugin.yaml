@@ -41,7 +41,7 @@ spec:
 
               if [ -z "$PLUGIN_NAME" ]; then
                 echo "WARNING: No console plugin annotation found in CSV. Using default name 'rhacs'."
-                PLUGIN_NAME="rhacs"
+                PLUGIN_NAME="advanced-cluster-security"
               fi
               echo "  Plugin name: $PLUGIN_NAME"
               echo ""
