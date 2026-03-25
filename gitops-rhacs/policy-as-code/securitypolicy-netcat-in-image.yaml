@@ -1,0 +1,35 @@
+---
+apiVersion: config.stackrox.io/v1alpha1
+kind: SecurityPolicy
+metadata:
+  name: netcat-in-image
+  namespace: stackrox
+  annotations:
+    argocd.argoproj.io/sync-wave: "15"
+    argocd.argoproj.io/sync-options: SkipDryRunOnMissingResource=true
+spec:
+  policyName: Netcat in Image
+  categories:
+    - Package Management
+  description: This policy checks for container images containing netcat
+  disabled: false
+  enforcementActions:
+    - SCALE_TO_ZERO_ENFORCEMENT
+    - FAIL_BUILD_ENFORCEMENT
+    - FAIL_DEPLOYMENT_CREATE_ENFORCEMENT
+    - FAIL_DEPLOYMENT_UPDATE_ENFORCEMENT
+  remediation: Use the base image package manager to remove "nmap-ncat"
+  lifecycleStages:
+    - BUILD
+    - DEPLOY
+  policySections:
+    - sectionName: Rule 1
+      policyGroups:
+        - fieldName: Image Component
+          booleanOperator: OR
+          negate: false
+          values:
+            - value: nmap-ncat=
+  rationale: Netcat potentially allows attackers to move laterally, and access external
+    services from a running pod
+  severity: HIGH_SEVERITY

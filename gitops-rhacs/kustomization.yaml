@@ -16,4 +16,6 @@ resources:
   - job-fetch-vuln-definitions
   # Secured cluster registration
   - securedcluster-local.yaml
+  # Policy as Code: declarative SecurityPolicy CRs
+  - policy-as-code
 # Auth provider: deploy via component (see components/auth-openshift, components/auth-oidc)

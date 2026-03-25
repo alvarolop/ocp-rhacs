@@ -69,6 +69,7 @@ ocp-rhacs/
 │   ├── job-cluster-registration/     # Job: CRS generation via roxctl
 │   ├── job-fetch-vuln-definitions/   # CronJob: offline vuln upload
 │   ├── job-enable-plugin/            # Job: dynamic console plugin (opt-in)
+│   ├── policy-as-code/              # Declarative SecurityPolicy CRs
 │   └── components/
 │       ├── auth-oidc/                # Component: OpenShift OIDC auth provider
 │       ├── auth-openshift/           # Component: OpenShift built-in auth provider
