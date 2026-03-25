@@ -35,7 +35,7 @@ For a detailed architecture reference, see the [official RHACS 4.10 Architecture
 This repository provides the following key automations, all driven by ArgoCD Applications and Kustomize:
 
 | Feature | Description |
-|---------|-------------|
+| ------- | ----------- |
 | 🚀 **Full RHACS deployment** | Installs the RHACS operator, creates the `stackrox` namespace, and deploys a production-ready **Central** instance with re-encrypt route, OpenShift monitoring, and persistent storage — all in a single ArgoCD sync. |
 | 🔑 **Automated Cluster Registration** | An ArgoCD Sync Hook Job uses `roxctl` to generate a **Cluster Registration Secret (CRS)** and applies it to the cluster, eliminating the manual `init-bundle` workflow. |
 | 📦 **Offline vulnerability definitions** | A daily CronJob downloads the scanner vulnerability database from `stackrox.io` and uploads it to Central via `roxctl scanner upload-db`, enabling **disconnected / air-gapped** environments. |
