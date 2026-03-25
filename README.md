@@ -13,9 +13,7 @@ This repository automates the deployment and day-2 configuration of [Red Hat Adv
 
 RHACS uses a **distributed architecture** composed of two sets of services:
 
-<p align="center">
-  <img src="https://access.redhat.com/webassets/avalon/d/Red_Hat_Advanced_Cluster_Security_for_Kubernetes-3.69-Architecture-en-US/images/84f94bd69b33eac318dc15dc8fbf51fb/acs-architecture-ocp.png" alt="RHACS Architecture on OpenShift" width="700">
-</p>
+![RHACS Architecture on OpenShift](docs/images/acs-architecture-ocp.png)
 
 - **Central services** — installed on *one* cluster — provide the management plane:
   - **Central** — the API server and web UI (RHACS Portal).
