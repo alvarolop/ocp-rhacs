@@ -100,7 +100,7 @@ ocp-rhacs/
 
 ## 🚀 How to Run
 
-Deploy the full RHACS stack (operator, Central, secured cluster, day-2 jobs, OIDC auth, and console link) by applying the ArgoCD Application:
+Deploy the full RHACS stack (operator, Central, secured cluster, day-2 jobs, OpenShift auth, and console link) by applying the ArgoCD Application:
 
 ```bash
 export CLUSTER_DOMAIN=$(oc get dns.config/cluster -o jsonpath='{.spec.baseDomain}')
@@ -109,7 +109,7 @@ cat application-rhacs.yaml | envsubst | oc apply -f -
 ```
 
 > [!IMPORTANT]
-> The `application-rhacs.yaml` contains `$CLUSTER_DOMAIN` placeholders that configure the Central route URL, OIDC callback, and ConsoleLink. You **must** substitute them before applying.
+> The `application-rhacs.yaml` contains a `$CLUSTER_DOMAIN` placeholder used by the ConsoleLink. You **must** substitute it before applying. To switch to OIDC-based auth instead, change the component from `auth-openshift` to `auth-oidc` in the application and add the required OIDC patches (see `components/auth-oidc/`).
 
 To also deploy the Compliance Operator and the File Integrity Operator:
 
