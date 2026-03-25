@@ -42,7 +42,7 @@ This repository provides the following key automations, all driven by ArgoCD App
 | 🔑 **Automated Cluster Registration** | An ArgoCD Sync Hook Job uses `roxctl` to generate a **Cluster Registration Secret (CRS)** and applies it to the cluster, eliminating the manual `init-bundle` workflow. |
 | 📦 **Offline vulnerability definitions** | A daily CronJob downloads the scanner vulnerability database from `stackrox.io` and uploads it to Central via `roxctl scanner upload-db`, enabling **disconnected / air-gapped** environments. |
 | 🔐 **Declarative authentication** | Kustomize components configure Central's auth provider declaratively — choose between **OpenShift built-in auth** or **OpenShift OIDC** (with `OAuthClient`) without manual UI steps. |
-| ✅ **Compliance Operator** | A separate ArgoCD Application installs the **Compliance Operator** in `openshift-compliance`, ready for you to apply `ScanSettings` and `Profiles`. |
+| ✅ **Compliance Operator** | A separate ArgoCD Application installs the **Compliance Operator** in `openshift-compliance` and binds the **DISA STIG** profiles (`ocp4-stig` + `ocp4-stig-node`) to the built-in `default` ScanSetting. Results are automatically visible in the RHACS Compliance dashboard. |
 | 🔍 **File Integrity Operator** | A separate ArgoCD Application installs the **File Integrity Operator** in `openshift-file-integrity`. It deploys AIDE-based DaemonSets that continuously monitor RHCOS nodes for unauthorized file changes. |
 
 Additional capabilities include a **ConsoleLink** component (adds RHACS to the OpenShift Application Menu under "Security") and a Job to **enable the RHACS dynamic console plugin** (available but commented out for opt-in).
@@ -76,6 +76,7 @@ ocp-rhacs/
 │
 ├── gitops-compliance/
 │   ├── kustomization.yaml
+│   ├── scansettingbinding-stig.yaml  # DISA STIG scan (ocp4-stig + ocp4-stig-node)
 │   └── operator/                     # Compliance Operator (Namespace, OperatorGroup, Subscription)
 │
 └── gitops-file-integrity/

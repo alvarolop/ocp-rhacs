@@ -4,3 +4,5 @@ kind: Kustomization
 resources:
   # Operator installation (namespace, operatorgroup, subscription)
   - operator
+  # DISA STIG scan bound to the built-in "default" ScanSetting
+  - scansettingbinding-stig.yaml
