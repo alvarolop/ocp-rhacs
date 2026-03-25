@@ -43,6 +43,7 @@ This repository provides the following key automations, all driven by ArgoCD App
 | 📦 **Offline vulnerability definitions** | A daily CronJob downloads the scanner vulnerability database from `stackrox.io` and uploads it to Central via `roxctl scanner upload-db`, enabling **disconnected / air-gapped** environments. |
 | 🔐 **Declarative authentication** | Kustomize components configure Central's auth provider declaratively — choose between **OpenShift built-in auth** or **OpenShift OIDC** (with `OAuthClient`) without manual UI steps. |
 | ✅ **Compliance Operator** | A separate ArgoCD Application installs the **Compliance Operator** in `openshift-compliance`, ready for you to apply `ScanSettings` and `Profiles`. |
+| 🔍 **File Integrity Operator** | A separate ArgoCD Application installs the **File Integrity Operator** in `openshift-file-integrity`. It deploys AIDE-based DaemonSets that continuously monitor RHCOS nodes for unauthorized file changes. |
 
 Additional capabilities include a **ConsoleLink** component (adds RHACS to the OpenShift Application Menu under "Security") and a Job to **enable the RHACS dynamic console plugin** (available but commented out for opt-in).
 
@@ -54,6 +55,7 @@ Additional capabilities include a **ConsoleLink** component (adds RHACS to the O
 ocp-rhacs/
 ├── application-rhacs.yaml            # ArgoCD App: RHACS operator + Central + day-2 jobs
 ├── application-compliance.yaml       # ArgoCD App: Compliance Operator
+├── application-file-integrity.yaml   # ArgoCD App: File Integrity Operator
 ├── Dockerfile                        # Custom image: ubi9 + roxctl + oc
 ├── .github/workflows/
 │   └── build-image.yaml              # Weekly build of quay.io/alopezme/rhacs-roxctl-oc
@@ -72,9 +74,15 @@ ocp-rhacs/
 │       ├── auth-openshift/           # Component: OpenShift built-in auth provider
 │       └── consolelink/              # Component: RHACS link in OCP console menu
 │
-└── gitops-compliance/
+├── gitops-compliance/
+│   ├── kustomization.yaml
+│   └── operator/                     # Compliance Operator (Namespace, OperatorGroup, Subscription)
+│
+└── gitops-file-integrity/
     ├── kustomization.yaml
-    └── operator/                     # Compliance Operator (Namespace, OperatorGroup, Subscription)
+    ├── fileintegrity-worker.yaml     # FileIntegrity CR: AIDE scans on worker nodes
+    ├── fileintegrity-master.yaml     # FileIntegrity CR: AIDE scans on master nodes
+    └── operator/                     # File Integrity Operator (Namespace, OperatorGroup, Subscription)
 ```
 
 ---
@@ -103,10 +111,11 @@ cat application-rhacs.yaml | envsubst | oc apply -f -
 > [!IMPORTANT]
 > The `application-rhacs.yaml` contains `$CLUSTER_DOMAIN` placeholders that configure the Central route URL, OIDC callback, and ConsoleLink. You **must** substitute them before applying.
 
-To also deploy the Compliance Operator:
+To also deploy the Compliance Operator and the File Integrity Operator:
 
 ```bash
 oc apply -f application-compliance.yaml
+oc apply -f application-file-integrity.yaml
 ```
 
 Wait for ArgoCD to sync, and within a few minutes you will have a fully operational RHACS environment — Central, SecuredCluster, authentication, and vulnerability definitions — ready to explore.

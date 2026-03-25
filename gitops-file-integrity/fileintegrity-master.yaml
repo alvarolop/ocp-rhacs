@@ -1,0 +1,16 @@
+---
+apiVersion: fileintegrity.openshift.io/v1alpha1
+kind: FileIntegrity
+metadata:
+  name: master-fileintegrity
+  namespace: openshift-file-integrity
+  annotations:
+    argocd.argoproj.io/sync-options: SkipDryRunOnMissingResource=true
+spec:
+  nodeSelector:
+    node-role.kubernetes.io/master: ""
+  config: {}
+  gracePeriod: 900
+  maxBackups: 5
+  initialDelay: 60
+  debug: false
