@@ -10,7 +10,4 @@ spec:
   nodeSelector:
     node-role.kubernetes.io/worker: ""
   config: {}
-  gracePeriod: 900
-  maxBackups: 5
-  initialDelay: 60
   debug: false
