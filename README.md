@@ -1,21 +1,9 @@
 # 🛡️ OpenShift — Advanced Cluster Security (RHACS)
 
-This repository automates the deployment and day-2 configuration of [Red Hat Advanced Cluster Security for Kubernetes (RHACS)](https://docs.redhat.com/en/documentation/red_hat_advanced_cluster_security_for_kubernetes/4.10/html/architecture/index) on OpenShift using a **GitOps approach** with ArgoCD and Kustomize.
+This repository automates the deployment and day-2 configuration of [Red Hat Advanced Cluster Security for Kubernetes (RHACS)](https://docs.redhat.com/en/documentation/red_hat_advanced_cluster_security_for_kubernetes/4.10/html/architecture/index) on OpenShift using a **GitOps approach** with ArgoCD and Kustomize. The goal is to **set up a fully functional RHACS environment in a single click**, ideal for demos, workshops, and testing scenarios.
 
 > [!NOTE]
 > This repo focuses on **container security** (vulnerability scanning, runtime protection, compliance). If you are looking for **secrets and certificate management** (Vault, cert-manager, External Secrets Operator, etc.), check out [ocp-secured-integration](https://github.com/alvarolop/ocp-secured-integration) instead.
-
----
-
-## Table of Contents
-
-- [Introduction](#introduction)
-- [Features](#-features)
-- [Repository Structure](#-repository-structure)
-- [Prerequisites](#-prerequisites)
-- [How to Run](#-how-to-run)
-- [Container Image](#-container-image)
-- [Useful Documentation](#-useful-documentation)
 
 ---
 
@@ -24,6 +12,10 @@ This repository automates the deployment and day-2 configuration of [Red Hat Adv
 **Red Hat Advanced Cluster Security for Kubernetes (RHACS)** is an enterprise-ready, Kubernetes-native security platform that helps you secure the build, deploy, and runtime phases of your containerized applications.
 
 RHACS uses a **distributed architecture** composed of two sets of services:
+
+<p align="center">
+  <img src="https://access.redhat.com/webassets/avalon/d/Red_Hat_Advanced_Cluster_Security_for_Kubernetes-3.69-Architecture-en-US/images/84f94bd69b33eac318dc15dc8fbf51fb/acs-architecture-ocp.png" alt="RHACS Architecture on OpenShift" width="700">
+</p>
 
 - **Central services** — installed on *one* cluster — provide the management plane:
   - **Central** — the API server and web UI (RHACS Portal).
@@ -35,8 +27,6 @@ RHACS uses a **distributed architecture** composed of two sets of services:
   - **Admission controller** — blocks workloads that violate security policies at deploy time.
   - **Collector** — analyzes container runtime and network activity on each node using eBPF (CORE_BPF).
   - **Scanner V4** (Indexer + DB) — enables local image scanning for integrated registries and delegated scanning.
-
-Central and Secured cluster services communicate over **gRPC/TLS on port 443**. Scanner V4 components use gRPC on port 8443 and PostgreSQL on port 5432.
 
 For a detailed architecture reference, see the [official RHACS 4.10 Architecture documentation](https://docs.redhat.com/en/documentation/red_hat_advanced_cluster_security_for_kubernetes/4.10/html/architecture/index).
 
@@ -94,7 +84,7 @@ ocp-rhacs/
 > [!TIP]
 > You need a running **OpenShift GitOps** (ArgoCD) instance in your cluster. If you don't have one, you can use [ocp-gitops-playground](https://github.com/alvarolop/ocp-gitops-playground) — clone it and run `./auto-install.sh` to deploy a fully configured ArgoCD.
 
-- OpenShift Container Platform **4.14+**
+- OpenShift Container Platform **4.18+**
 - OpenShift GitOps operator installed
 - `oc` CLI authenticated as `cluster-admin`
 
@@ -102,13 +92,9 @@ ocp-rhacs/
 
 ## 🚀 How to Run
 
-### Option 1: Deploy everything with ArgoCD (recommended)
-
 Deploy the full RHACS stack (operator, Central, secured cluster, day-2 jobs, OIDC auth, and console link) by applying the ArgoCD Application:
 
 ```bash
-# Replace $CLUSTER_DOMAIN with your cluster's base domain
-# e.g., cluster-abc.sandbox123.opentlc.com
 export CLUSTER_DOMAIN=$(oc get dns.config/cluster -o jsonpath='{.spec.baseDomain}')
 
 cat application-rhacs.yaml | envsubst | oc apply -f -
@@ -123,63 +109,7 @@ To also deploy the Compliance Operator:
 oc apply -f application-compliance.yaml
 ```
 
-### Option 2: Render and apply independently with Kustomize
-
-You can render each component individually without ArgoCD:
-
-#### RHACS core (operator + Central + day-2 jobs)
-
-```bash
-kustomize build gitops-rhacs/ | oc apply -f -
-```
-
-#### RHACS with OpenShift built-in auth
-
-Temporarily add the component to `gitops-rhacs/kustomization.yaml`:
-
-```yaml
-components:
-  - components/auth-openshift
-  - components/consolelink
-```
-
-Then render:
-
-```bash
-kustomize build gitops-rhacs/ | oc apply -f -
-```
-
-#### Compliance Operator only
-
-```bash
-kustomize build gitops-compliance/ | oc apply -f -
-```
-
-### Option 3: Deploy individual resources
-
-You can also apply specific sub-directories for granular control:
-
-```bash
-# 1) Install only the RHACS operator
-kustomize build gitops-rhacs/operator/ | oc apply -f -
-
-# 2) Wait for the operator to be ready
-echo -n "Waiting for RHACS operator pods..."
-while ! oc get csv -n rhacs-operator -o jsonpath='{.items[0].status.phase}' 2>/dev/null | grep -q Succeeded; do
-  echo -n "." && sleep 5
-done
-echo " ✅"
-
-# 3) Create namespace and deploy Central
-oc apply -f gitops-rhacs/ns-stackrox.yaml
-oc apply -f gitops-rhacs/central-stackrox-central-services.yaml
-
-# 4) Run the cluster registration job
-kustomize build gitops-rhacs/job-cluster-registration/ | oc apply -f -
-
-# 5) Deploy the secured cluster
-oc apply -f gitops-rhacs/securedcluster-local.yaml
-```
+Wait for ArgoCD to sync, and within a few minutes you will have a fully operational RHACS environment — Central, SecuredCluster, authentication, and vulnerability definitions — ready to explore.
 
 ---
 
@@ -188,11 +118,9 @@ oc apply -f gitops-rhacs/securedcluster-local.yaml
 Some of the day-2 Jobs require `curl`, `oc`, and `roxctl` in the same container. Since no Red Hat-supported image ships all three, this repo includes a `Dockerfile` that builds a minimal image based on `ubi9-minimal`:
 
 ```bash
-# Build (optionally override RHACS_VERSION)
 podman build -t quay.io/alopezme/rhacs-roxctl-oc:4.10 \
   --build-arg RHACS_VERSION=4.10.0 .
 
-# Push
 podman push quay.io/alopezme/rhacs-roxctl-oc:4.10
 ```
 
